@@ -145,10 +145,16 @@ move house (Board ((house1 , score1) , (house2  , score2)) player)  = if house >
 
 
 processBoardFromResponseYou :: Int -> [House] -> Board
-processBoardFromResponseYou score2 response = (Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) Opponent)
+processBoardFromResponseYou score2 response =  if (isOver (Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) Opponent)) == True then
+													  (Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) You)
+												else 
+														(Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) Opponent)
 
 processBoardFromResponseOpponent :: Int -> [House] -> Board
-processBoardFromResponseOpponent score1 response = (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) You)
+processBoardFromResponseOpponent score1 response = if (isOver (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) Opponent)) == True then
+													  (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) Opponent)
+												   else
+													  (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) You)
 
 increment_helper :: Int -> Int-> [Int] -> [House]
 increment_helper house count houses = if count == 0 then houses
@@ -160,8 +166,8 @@ replaceAt _ _ []     = []
 replaceAt 0 x (_:ys) = x:ys
 replaceAt n x (y:ys) = y:replaceAt (n - 1) x ys
 
-getNotOverScore :: Board -> (Int , Int)
-getNotOverScore (Board ((house1 , score1) , (house2  , score2)) player) = (score1 + (foldl (+) 0 house1 ) , score2 + (foldl (+) 0 house2 ))
+getOverScore :: Board -> (Int , Int)
+getOverScore (Board ((house1 , score1) , (house2  , score2)) player) = (score1 + (foldl (+) 0 house1 ) , score2 + (foldl (+) 0 house2 ))
 
 {-
     *** TODO ***
@@ -171,7 +177,7 @@ getNotOverScore (Board ((house1 , score1) , (house2  , score2)) player) = (score
     Calculul trebuie să țină cont de eventuala încheiere a jocului.
 -}
 scores :: Board -> (Int, Int)
-scores (Board ((house1 , score1) , (house2  , score2)) player)  = if (isOver board) == True then (score1 , score2) else getNotOverScore board where	
+scores (Board ((house1 , score1) , (house2  , score2)) player)  = if (isOver board) == True then getOverScore board else (score1, score2) where	
 																board = Board ((house1 , score1 ) , (house2 , score2)) player
 
 

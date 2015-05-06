@@ -133,17 +133,22 @@ initialBoard = (Board (([4,4,4,4,4,4] , 0) , ([4,4,4,4,4,4] , 0)) You)
     Întoarce aceeași configurație dacă mutarea nu poate fi efectuată
     din diverse motive, precum numărul eronat al casei, sau casa goală.
 -}
-move :: House -> Board -> [House] -- modified Board return with [House]
-move house (Board ((house1 , score1) , (house2  , score2)) player)  = if house > 6 then house1 
+move :: House -> Board -> Board -- modified Board return with [House]
+move house (Board ((house1 , score1) , (house2  , score2)) player)  = if house > 6 then (Board ((house1 , score1) , (house2  , score2)) player) 
 																	  else 
 																		if player == You then 
-																		result_list_you
-																		else result_list_opponent
+																		processBoardFromResponseYou score2 result_list_you
+																		else processBoardFromResponseOpponent score1 result_list_opponent
 																	where
 																		result_list_you = increment_helper (house +1 ) (house1 !! (house -1)) ((replaceAt (house-1) 0 house1) ++ [score1] ++ reverse house2 )
 																		result_list_opponent = increment_helper (6 - house + 1 + 1) (house2 !! (house - 1)) ((replaceAt (6 - house) 0 (reverse house2)) ++ [score2] ++ house1)
 
 
+processBoardFromResponseYou :: Int -> [House] -> Board
+processBoardFromResponseYou score2 response = (Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) Opponent)
+
+processBoardFromResponseOpponent :: Int -> [House] -> Board
+processBoardFromResponseOpponent score1 response = (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) You)
 
 increment_helper :: Int -> Int-> [Int] -> [House]
 increment_helper house count houses = if count == 0 then houses

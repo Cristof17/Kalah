@@ -134,27 +134,38 @@ initialBoard = (Board (([4,4,4,4,4,4] , 0) , ([4,4,4,4,4,4] , 0)) You)
     din diverse motive, precum numărul eronat al casei, sau casa goală.
 -}
 move :: House -> Board -> Board -- modified Board return with [House]
-move house (Board ((house1 , score1) , (house2  , score2)) player)  = if house > 6 then (Board ((house1 , score1) , (house2  , score2)) player) 
+move house (Board ((house1 , score1) , (house2  , score2)) player)  = if house > 6 then board
 																	  else 
 																		if player == You then 
-																		processBoardFromResponseYou score2 result_list_you
-																		else processBoardFromResponseOpponent score1 result_list_opponent
+																		processBoardFromResponseYou score2 result_list_you (keepPlayer board house)
+																		else processBoardFromResponseOpponent score1 result_list_opponent (keepPlayer board house)
 																	where
 																		result_list_you = increment_helper (house +1 ) (house1 !! (house -1)) ((replaceAt (house-1) 0 house1) ++ [score1] ++ reverse house2 )
 																		result_list_opponent = increment_helper (6 - house + 1 + 1) (house2 !! (house - 1)) ((replaceAt (6 - house) 0 (reverse house2)) ++ [score2] ++ house1)
-
-
-processBoardFromResponseYou :: Int -> [House] -> Board
-processBoardFromResponseYou score2 response =  if (isOver (Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) Opponent)) == True then
+																		board = (Board ((house1 , score1) , (house2  , score2)) player) 
+keepPlayer :: Board -> Int -> Player
+keepPlayer board position = if (who board) == You then
+										if (rem (((fst (yourSeeds board)) !! (position -1)) + position) 13) == 7 then
+												You
+										else
+												Opponent
+									else
+										if (rem(((fst (oppsSeeds board)) !! (position -1)) + position) 13) == 7 then
+												Opponent
+										else
+												You
+									
+processBoardFromResponseYou :: Int -> [House] -> Player -> Board
+processBoardFromResponseYou score2 response player =  if (isOver (Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) Opponent)) == True then
 													  (Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) You)
 												else 
-														(Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) Opponent)
+														(Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) player)
 
-processBoardFromResponseOpponent :: Int -> [House] -> Board
-processBoardFromResponseOpponent score1 response = if (isOver (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) Opponent)) == True then
+processBoardFromResponseOpponent :: Int -> [House] -> Player -> Board
+processBoardFromResponseOpponent score1 response player = if (isOver (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) Opponent)) == True then
 													  (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) Opponent)
 												   else
-													  (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) You)
+													  (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) player)
 
 increment_helper :: Int -> Int-> [Int] -> [House]
 increment_helper house count houses = if count == 0 then houses

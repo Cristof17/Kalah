@@ -143,7 +143,8 @@ move house (Board ((house1 , score1) , (house2  , score2)) player)  = if house >
 																		result_list_you = increment_helper (house +1 ) (house1 !! (house -1)) ((replaceAt (house-1) 0 house1) ++ [score1] ++ reverse house2 )
 																		result_list_opponent = increment_helper (6 - house + 1 + 1) (house2 !! (house - 1)) ((replaceAt (6 - house) 0 (reverse house2)) ++ [score2] ++ house1)
 																		board = (Board ((house1 , score1) , (house2  , score2)) player) 
-keepPlayer :: Board -> Int -> Player
+																		
+keepPlayer :: Board -> Int -> Player    -- check to see if the player keeps his turn 
 keepPlayer board position = if (who board) == You then
 										if (rem (((fst (yourSeeds board)) !! (position -1)) + position) 13) == 7 then
 												You
@@ -169,10 +170,15 @@ processBoardFromResponseOpponent score1 response player = if (isOver (Board (( d
 
 increment_helper :: Int -> Int-> [Int] -> [House]
 increment_helper house count houses = if count == 0 then houses
+									  else if ((count == 1) && (house /= 6)) then
+										   if(houses !! (house -1)) == 0 then  -- adauga scoicile oponentului 
+											  increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt (house-1) ((houses !! (house -1)) + 1 + (houses !! opposite )) houses))
+										   else
+											  increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses )
 									  else 
 									  if house == ((length houses)+1)  then increment_helper 1 (count) (replaceAt (house -1 ) ((houses !! (house - 1))) houses )
 									  else increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses )
-
+									  where opposite = (house + ((((6 - house) + 1) * 2)) -1)
 replaceAt _ _ []     = []
 replaceAt 0 x (_:ys) = x:ys
 replaceAt n x (y:ys) = y:replaceAt (n - 1) x ys

@@ -170,9 +170,12 @@ processBoardFromResponseOpponent score1 response player = if (isOver (Board (( d
 
 increment_helper :: Int -> Int-> [Int] -> [House]
 increment_helper house count houses = if count == 0 then houses
-									  else if ((count == 1) && (house /= 7)) then
-										   if(houses !! (house -1)) == 0 then  -- adauga scoicile oponentului 
-											  increment_helper (house + 1) (count -1 ) (replaceAt opposite 10 (replaceAt (house-1) ((houses !! (house -1)) + 1 + (houses !! opposite )) houses))
+									  else if (count == 1) then
+										   if((houses !! (house -1)) == 0)then  -- adauga scoicile oponentului 
+											  if(house == 7) then
+												increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses )
+											  else
+												increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt (house-1) ((houses !! (house -1)) + 1 + (houses !! opposite )) houses))
 										   else
 											  increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses )
 									  else 

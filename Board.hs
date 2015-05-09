@@ -134,7 +134,7 @@ initialBoard = (Board (([4,4,4,4,4,4] , 0) , ([4,4,4,4,4,4] , 0)) You)
     din diverse motive, precum numărul eronat al casei, sau casa goală.
 -}
 move :: House -> Board -> Board -- modified Board return with [House]
-move house (Board ((house1 , score1) , (house2  , score2)) player)  = if house > 6 then board
+move house (Board ((house1 , score1) , (house2  , score2)) player)  = if house > 6 || house <= 0 then board
 																	  else 
 																		if player == You then 
 																		processBoardFromResponseYou score2 result_list_you (keepPlayer board house)
@@ -173,9 +173,9 @@ increment_helper house count houses = if count == 0 then houses
 									  else if (count == 1) then
 										   if((houses !! (house -1)) == 0)then  -- adauga scoicile oponentului 
 											  if(house == 7) then
-												increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses )
+												increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses ) --if it's score
 											  else
-												increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt (house-1) ((houses !! (house -1)) + 1 + (houses !! opposite )) houses))
+												increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt 6 ((houses !! (house -1)) + 1 + (houses !! opposite )) houses)) -- pun scoicile furate la scor 
 										   else
 											  increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses )
 									  else 

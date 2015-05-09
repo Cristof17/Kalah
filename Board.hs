@@ -137,8 +137,11 @@ move :: House -> Board -> Board -- modified Board return with [House]
 move house (Board ((house1 , score1) , (house2  , score2)) player)  = if house > 6 || house <= 0 then board
 																	  else 
 																		if player == You then 
-																		processBoardFromResponseYou score2 result_list_you (keepPlayer board house)
-																		else processBoardFromResponseOpponent score1 result_list_opponent (keepPlayer board house)
+																			if (house1 !! (house -1)) == 0 then board --casa eronata
+																			else processBoardFromResponseYou score2 result_list_you (keepPlayer board house)
+																		else 
+																			if (house2 !! (house - 1)) == 0 then board
+																			else processBoardFromResponseOpponent score1 result_list_opponent (keepPlayer board house)
 																	where
 																		result_list_you = increment_helper (house +1 ) (house1 !! (house -1)) ((replaceAt (house-1) 0 house1) ++ [score1] ++ reverse house2 )
 																		result_list_opponent = increment_helper (6 - house + 1 + 1) (house2 !! (house - 1)) ((replaceAt (6 - house) 0 (reverse house2)) ++ [score2] ++ house1)
@@ -169,10 +172,10 @@ processBoardFromResponseOpponent score1 response player = if (isOver (Board (( d
 													  (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) player)
 
 increment_helper :: Int -> Int-> [Int] -> [House]
-increment_helper house count houses = if count == 0 then houses
-									  else if (count == 1) then
+increment_helper house count houses = if count == 0 then houses --sfarsitul move-ului
+									  else if (count == 1) then --ultimul pas al modificarii (poate ajunge pe o casuta goala)
 										   if((houses !! (house -1)) == 0)then  -- adauga scoicile oponentului 
-											  if(house == 7) then
+											  if(house == 7) then --daca este pe casuta de scor
 												increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses ) --if it's score
 											  else
 												increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt 6 ((houses !! (house -1)) + 1 + (houses !! opposite )) houses)) -- pun scoicile furate la scor 

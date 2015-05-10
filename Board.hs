@@ -148,7 +148,9 @@ move house (Board ((house1 , score1) , (house2  , score2)) player)  = if house >
 																		board = (Board ((house1 , score1) , (house2  , score2)) player) 
 																		
 keepPlayer :: Board -> Int -> Player    -- check to see if the player keeps his turn 
-keepPlayer board position = if (who board) == You then
+keepPlayer board position = if isOver board then who board		
+							else
+									if (who board) == You then								
 										if (rem (((fst (yourSeeds board)) !! (position -1)) + position) 13) == 7 then
 												You
 										else
@@ -178,6 +180,9 @@ increment_helper house count houses = if count == 0 then houses --sfarsitul move
 											  if(house == 7) then --daca este pe casuta de scor
 												increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses ) --if it's score
 											  else
+												if (houses !! opposite == 0) then --daca ma mut pe casuta goala , iar oponentul nu are scoici
+												increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt (house-1) ((houses !! (house -1)) + 1 + (houses !! opposite )) houses)) -- pun scoicile furate la scor 
+												else
 												increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt 6 ((houses !! (house -1)) + 1 + (houses !! opposite )) houses)) -- pun scoicile furate la scor 
 										   else
 											  increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses )

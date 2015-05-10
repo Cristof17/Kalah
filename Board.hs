@@ -133,18 +133,31 @@ initialBoard = (Board (([4,4,4,4,4,4] , 0) , ([4,4,4,4,4,4] , 0)) You)
     Întoarce aceeași configurație dacă mutarea nu poate fi efectuată
     din diverse motive, precum numărul eronat al casei, sau casa goală.
 -}
+
 move :: House -> Board -> Board -- modified Board return with [House]
 move house (Board ((house1 , score1) , (house2  , score2)) player)  = if house > 6 || house <= 0 then board
 																	  else 
 																		if player == You then 
 																			if (house1 !! (house -1)) == 0 then board --casa eronata
-																			else processBoardFromResponseYou score2 result_list_you (keepPlayer board house)
+																				else
+																					if(result_player_you == Opponent) then -- am furat scoici de la oponent (am trecut de la user YOU la OPPONENT)
+																						processBoardFromResponseYou score2 result_list_you result_player_you
+																					else
+																						processBoardFromResponseYou score2 result_list_you (keepPlayer board house)
 																		else 
 																			if (house2 !! (house - 1)) == 0 then board
-																			else processBoardFromResponseOpponent score1 result_list_opponent (keepPlayer board house)
+																				else
+																					if(result_player_opponent == You) then
+																						processBoardFromResponseOpponent score1 result_list_opponent result_player_opponent
+																					else 
+																						processBoardFromResponseOpponent score1 result_list_opponent (keepPlayer board house)
 																	where
-																		result_list_you = increment_helper (house +1 ) (house1 !! (house -1)) ((replaceAt (house-1) 0 house1) ++ [score1] ++ reverse house2 )
-																		result_list_opponent = increment_helper (6 - house + 1 + 1) (house2 !! (house - 1)) ((replaceAt (6 - house) 0 (reverse house2)) ++ [score2] ++ house1)
+																		result_you = (increment_helper (house +1 ) (house1 !! (house -1)) ((replaceAt (house-1) 0 house1) ++ [score1] ++ reverse house2 ) You)
+																		result_opponent = (increment_helper (6 - house + 1 + 1) (house2 !! (house - 1)) ((replaceAt (6 - house) 0 (reverse house2)) ++ [score2] ++ house1) Opponent)
+																		result_list_you = (fst result_you)
+																		result_list_opponent = (fst result_opponent)
+																		result_player_you = (snd result_you)
+																		result_player_opponent = (snd result_opponent)
 																		board = (Board ((house1 , score1) , (house2  , score2)) player) 
 																		
 keepPlayer :: Board -> Int -> Player    -- check to see if the player keeps his turn 
@@ -162,33 +175,38 @@ keepPlayer board position = if isOver board then who board
 												You
 									
 processBoardFromResponseYou :: Int -> [House] -> Player -> Board
-processBoardFromResponseYou score2 response player =  if (isOver (Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) Opponent)) == True then
+processBoardFromResponseYou score2 response player =  if (isOver (Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) player)) == True then
 													  (Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) You)
 												else 
 														(Board (((take 6 response) , response !! 6) , (reverse (drop 7 response) , score2)) player)
 
 processBoardFromResponseOpponent :: Int -> [House] -> Player -> Board
-processBoardFromResponseOpponent score1 response player = if (isOver (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) Opponent)) == True then
+processBoardFromResponseOpponent score1 response player = if (isOver (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) player)) == True then
 													  (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) Opponent)
 												   else
 													  (Board (( drop 7 response , score1 ) , ((reverse (take 6 response)) , response !! 6)) player)
 
-increment_helper :: Int -> Int-> [Int] -> [House]
-increment_helper house count houses = if count == 0 then houses --sfarsitul move-ului
+increment_helper :: Int -> Int-> [Int] -> Player ->([House] , Player)
+increment_helper house count houses player = if count == 0 then (houses , player)  --sfarsitul move-ului
 									  else if (count == 1) then --ultimul pas al modificarii (poate ajunge pe o casuta goala)
 										   if((houses !! (house -1)) == 0)then  -- adauga scoicile oponentului 
 											  if(house == 7) then --daca este pe casuta de scor
-												increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses ) --if it's score
+												increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses ) player --if it's score
 											  else
 												if (houses !! opposite == 0) then --daca ma mut pe casuta goala , iar oponentul nu are scoici
-												increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt (house-1) ((houses !! (house -1)) + 1 + (houses !! opposite )) houses)) -- pun scoicile furate la scor 
-												else
-												increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt 6 ((houses !! (house -1)) + 1 + (houses !! opposite )) houses)) -- pun scoicile furate la scor 
+													increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt (house-1) ((houses !! (house -1)) + 1 + (houses !! opposite )) houses)) player-- pun scoicile furate la scor 
+												else -- oponentul are scoici si trebuie sa i le iau pentru a schimba si jucatorul
+													if(player == You) then
+														increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt 6 ((houses !! (house -1)) + 1 + (houses !! opposite )) houses)) Opponent -- pun scoicile furate la scor 
+													else 
+														increment_helper (house + 1) (count -1 ) (replaceAt opposite 0 (replaceAt 6 ((houses !! (house -1)) + 1 + (houses !! opposite )) houses)) You -- pun scoicile furate la scor 
 										   else
-											  increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses )
+											  increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses ) player
 									  else 
-									  if house == ((length houses)+1)  then increment_helper 1 (count) (replaceAt (house -1 ) ((houses !! (house - 1))) houses )
-									  else increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses )
+									  if house == ((length houses)+1)  then 
+										increment_helper 1 (count) (replaceAt (house -1 ) ((houses !! (house - 1))) houses ) player
+									  else 
+										increment_helper (house + 1) (count-1) (replaceAt (house -1 ) ((houses !! (house - 1)) +1) houses ) player
 									  where opposite = (house + ((((6 - house) + 1) * 2)) -1)
 replaceAt _ _ []     = []
 replaceAt 0 x (_:ys) = x:ys
